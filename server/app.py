@@ -19,11 +19,9 @@ db.init_app(app)
 
 api = Api(app)
 
-
 @app.route("/")
 def index():
     return "<h1>Code challenge</h1>"
-
 
 class Restaurants(Resource):
     def get(self):
@@ -32,7 +30,6 @@ class Restaurants(Resource):
             for restaurant in Restaurant.query.all()
         ]
         return make_response(restaurants, 200)
-
 
 class RestaurantById(Resource):
     def get(self, id):
@@ -63,17 +60,21 @@ class RestaurantById(Resource):
         db.session.commit()
         return make_response({}, 204)
 
-
 class Pizzas(Resource):
     def get(self):
         pizzas = [pizza.to_dict(only=("id", "name", "ingredients")) for pizza in Pizza.query.all()]
-        return make_response(pizzas, 200)
-
+        return make_response(pizas, 200)
 
 class RestaurantPizzas(Resource):
     def post(self):
         data = request.get_json()
         try:
+            # Validate that Pizza and Restaurant exist
+            if not Pizza.query.get(data["pizza_id"]):
+                return make_response({"errors": ["Pizza not found"]}, 404)
+            if not Restaurant.query.get(data["restaurant_id"]):
+                return make_response({"errors": ["Restaurant not found"]}, 404)
+
             restaurant_pizza = RestaurantPizza(
                 price=data["price"],
                 pizza_id=data["pizza_id"],
@@ -94,15 +95,15 @@ class RestaurantPizzas(Resource):
                 ),
                 201,
             )
-        except ValueError:
-            return make_response({"errors": ["validation errors"]}, 400)
-
+        except ValueError as e:
+            return make_response({"errors": [str(e)]}, 400)
+        except Exception as e:
+            return make_response({"errors": ["Failed to create RestaurantPizza"]}, 400)
 
 api.add_resource(Restaurants, "/restaurants")
 api.add_resource(RestaurantById, "/restaurants/<int:id>")
 api.add_resource(Pizzas, "/pizzas")
 api.add_resource(RestaurantPizzas, "/restaurant_pizzas")
-
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
