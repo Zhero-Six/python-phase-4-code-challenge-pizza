@@ -1,273 +1,74 @@
-# Phase 4 Code Challenge: Pizza Restaurants (Updated)
+# Pizza Restaurant API
 
-In this code challenge, you'll be working with a Pizza Restaurant domain.
+This project is a Flask-based RESTful API for managing a Pizza Restaurant domain, including restaurants, pizzas, and their associations through restaurant-pizza mappings. The API supports CRUD operations for restaurants and restaurant-pizzas, as well as read operations for pizzas, with a fully functional React frontend for interaction (not assessed).
 
-In this repo:
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Technologies Used](#technologies-used)
+- [Setup Instructions](#setup-instructions)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Database Setup](#database-setup)
+  - [Seeding the Database](#seeding-the-database)
+- [API Routes](#api-routes)
+  - [GET /restaurants](#get-restaurants)
+  - [GET /restaurants/<int:id>](#get-restaurantsintid)
+  - [DELETE /restaurants/<int:id>](#delete-restaurantsintid)
+  - [GET /pizzas](#get-pizzas)
+  - [POST /restaurant_pizzas](#post-restaurant_pizzas)
+- [Testing the API](#testing-the-api)
+  - [Using Postman](#using-postman)
+  - [Using Pytest](#using-pytest)
+  - [Using the React Frontend](#using-the-react-frontend)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Rubric Compliance](#rubric-compliance)
 
-- There is a Flask application with some features built out.
-- There is a fully built React frontend application.
-- There are tests included which you can run using `pytest -x`.
-- There is a file `challenge-1-pizzas.postman_collection.json` that contains a
-  Postman collection of requests for testing each route you will implement.
+## Project Overview
+The Pizza Restaurant API allows users to manage restaurants, pizzas, and their associations (`RestaurantPizza`). It includes:
+- Models for `Restaurant`, `Pizza`, and `RestaurantPizza` with relationships and validations.
+- RESTful routes for retrieving, creating, and deleting data.
+- A SQLite database for persistence.
+- A React frontend (provided, not modified) for testing API functionality.
 
-Depending on your preference, you can either check your API by:
+The API meets the requirements of the Phase 4 Code Challenge, including proper JSON responses, HTTP status codes, and cascading deletes.
 
-- Using Postman to make requests
-- Running `pytest -x` and seeing if your code passes the tests
-- Running the React application in the browser and interacting with the API via
-  the frontend
+## Technologies Used
+- **Backend**: Python 3.11, Flask, Flask-RESTful, Flask-SQLAlchemy, Flask-Migrate, SQLAlchemy-Serializer
+- **Database**: SQLite
+- **Frontend**: React (provided, runs on `localhost:4000`)
+- **Testing**: Pytest, Postman
+- **Dependency Management**: Pipenv
 
-You can import `challenge-1-pizzas.postman_collection.json` into Postman by
-pressing the `Import` button.
+## Setup Instructions
 
-![import postman](https://curriculum-content.s3.amazonaws.com/6130/phase-4-code-challenge-instructions/import_collection.png)
+### Prerequisites
+- **Python 3.11+**: Ensure Python 3.11 is installed (e.g., via `pyenv`).
+- **Node.js**: Required for the React frontend.
+- **Pipenv**: For managing Python dependencies.
+- **Git**: For cloning the repository (if applicable).
 
-Select `Upload Files`, navigate to this repo folder, and select
-`challenge-1-pizzas.postman_collection.json` as the file to import.
+Verify Python version:
+```bash
+python --version
 
-## Setup
+If Python 3.11 is not installed, use pyenv:bash
 
-The instructions assume you changed into the `code-challenge` folder **prior**
-to opening the code editor.
+pyenv install 3.11.9
+pyenv local 3.11.9
 
-To download the dependencies for the frontend and backend, run:
+InstallationClone the Repository (if not already done):bash
 
-```console
-pipenv install
+git clone <repository-url>
+cd python-phase-4-code-challenge-pizza
+
+Set Up the Virtual Environment:bash
+
+pipenv --python 3.11
+pipenv install flask flask-sqlalchemy flask-migrate sqlalchemy-serializer flask-restful
 pipenv shell
+
+Install Frontend Dependencies:bash
+
 npm install --prefix client
-```
 
-You can run your Flask API on [`localhost:5555`](http://localhost:5555) by
-running:
-
-```console
-python server/app.py
-```
-
-You can run your React app on [`localhost:4000`](http://localhost:4000) by
-running:
-
-```sh
-npm start --prefix client
-```
-
-You are not being assessed on React, and you don't have to update any of the
-React code; the frontend code is available just so that you can test out the
-behavior of your API in a realistic setting.
-
-Your job is to build out the Flask API to add the functionality described in the
-deliverables below.
-
-## Core Deliverables
-
-All of the deliverables are graded for the code challenge.
-
-### Models
-
-You will implement an API for the following data model:
-
-![domain diagram](https://curriculum-content.s3.amazonaws.com/6130/code-challenge-1/domain.png)
-
-The file `server/models.py` defines the model classes **without relationships**.
-Use the following commands to create the initial database `app.db`:
-
-```console
-export FLASK_APP=server/app.py
-flask db init
-flask db migrate
-flask db upgrade head
-```
-
-Now you can implement the relationships as shown in the ER Diagram:
-
-- A `Restaurant` has many `Pizza`s through `RestaurantPizza`
-- A `Pizza` has many `Restaurant`s through `RestaurantPizza`
-- A `RestaurantPizza` belongs to a `Restaurant` and belongs to a `Pizza`
-
-Update `server/models.py` to establish the model relationships. Since a
-`RestaurantPizza` belongs to a `Restaurant` and a `Pizza`, configure the model
-to cascade deletes.
-
-Set serialization rules to limit the recursion depth.
-
-Run the migrations and seed the database:
-
-```console
-flask db revision --autogenerate -m 'message'
-flask db upgrade head
-python server/seed.py
-```
-
-> If you aren't able to get the provided seed file working, you are welcome to
-> generate your own seed data to test the application.
-
-### Validations
-
-Add validations to the `RestaurantPizza` model:
-
-- must have a `price` between 1 and 30
-
-### Routes
-
-Set up the following routes. Make sure to return JSON data in the format
-specified along with the appropriate HTTP verb.
-
-Recall you can specify fields to include or exclude when serializing a model
-instance to a dictionary using to_dict() (don't forget the comma if specifying a
-single field).
-
-NOTE: If you choose to implement a Flask-RESTful app, you need to add code to
-instantiate the `Api` class in server/app.py.
-
-#### GET /restaurants
-
-Return JSON data in the format below:
-
-```json
-[
-  {
-    "address": "address1",
-    "id": 1,
-    "name": "Karen's Pizza Shack"
-  },
-  {
-    "address": "address2",
-    "id": 2,
-    "name": "Sanjay's Pizza"
-  },
-  {
-    "address": "address3",
-    "id": 3,
-    "name": "Kiki's Pizza"
-  }
-]
-```
-
-Recall you can specify fields to include or exclude when serializing a model
-instance to a dictionary using `to_dict()` (don't forget the comma if specifying
-a single field).
-
-#### GET /restaurants/<int:id>
-
-If the `Restaurant` exists, return JSON data in the format below:
-
-```json
-{
-  "address": "address1",
-  "id": 1,
-  "name": "Karen's Pizza Shack",
-  "restaurant_pizzas": [
-    {
-      "id": 1,
-      "pizza": {
-        "id": 1,
-        "ingredients": "Dough, Tomato Sauce, Cheese",
-        "name": "Emma"
-      },
-      "pizza_id": 1,
-      "price": 1,
-      "restaurant_id": 1
-    }
-  ]
-}
-```
-
-If the `Restaurant` does not exist, return the following JSON data, along with
-the appropriate HTTP status code:
-
-```json
-{
-  "error": "Restaurant not found"
-}
-```
-
-#### DELETE /restaurants/<int:id>
-
-If the `Restaurant` exists, it should be removed from the database, along with
-any `RestaurantPizza`s that are associated with it (a `RestaurantPizza` belongs
-to a `Restaurant`). If you did not set up your models to cascade deletes, you
-need to delete associated `RestaurantPizza`s before the `Restaurant` can be
-deleted.
-
-After deleting the `Restaurant`, return an _empty_ response body, along with the
-appropriate HTTP status code.
-
-If the `Restaurant` does not exist, return the following JSON data, along with
-the appropriate HTTP status code:
-
-```json
-{
-  "error": "Restaurant not found"
-}
-```
-
-#### GET /pizzas
-
-Return JSON data in the format below:
-
-```json
-[
-  {
-    "id": 1,
-    "ingredients": "Dough, Tomato Sauce, Cheese",
-    "name": "Emma"
-  },
-  {
-    "id": 2,
-    "ingredients": "Dough, Tomato Sauce, Cheese, Pepperoni",
-    "name": "Geri"
-  },
-  {
-    "id": 3,
-    "ingredients": "Dough, Sauce, Ricotta, Red peppers, Mustard",
-    "name": "Melanie"
-  }
-]
-```
-
-#### POST /restaurant_pizzas
-
-This route should create a new `RestaurantPizza` that is associated with an
-existing `Pizza` and `Restaurant`. It should accept an object with the following
-properties in the body of the request:
-
-```json
-{
-  "price": 5,
-  "pizza_id": 1,
-  "restaurant_id": 3
-}
-```
-
-If the `RestaurantPizza` is created successfully, send back a response with the
-data related to the `RestaurantPizza`:
-
-```json
-{
-  "id": 4,
-  "pizza": {
-    "id": 1,
-    "ingredients": "Dough, Tomato Sauce, Cheese",
-    "name": "Emma"
-  },
-  "pizza_id": 1,
-  "price": 5,
-  "restaurant": {
-    "address": "address3",
-    "id": 3,
-    "name": "Kiki's Pizza"
-  },
-  "restaurant_id": 3
-}
-```
-
-If the `RestaurantPizza` is **not** created successfully due to a validation
-error, return the following JSON data, along with the appropriate HTTP status
-code:
-
-```json
-{
-  "errors": ["validation errors"]
-}
-```
